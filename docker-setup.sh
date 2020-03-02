@@ -15,6 +15,44 @@ function setup_conf_and_secret {
     postmap /etc/postfix/relay_passwd
 }
 
+
+# setup DKIM
+if [ -z "$DKIM_DOMAIN" ]; then
+  echo Domain is not specified!
+  exit 1
+fi
+
+# generate keys
+mkdir -p /etc/opendkim/keys
+if [ ! -f "/etc/opendkim/keys/default" ]; then
+  /usr/local/sbin/opendkim-genkey -D /etc/opendkim/keys/ -d $DKIM_DOMAIN -s default
+  mv /etc/opendkim/keys/default.private /etc/opendkim/keys/default
+fi 
+chown -R opendkim:opendkim /etc/opendkim/keys
+
+if [ -f "/etc/opendkim/keys/default.txt" ]; then
+  echo Make sure you created TXT record for your domain:
+  cat /etc/opendkim/keys/default.txt
+fi
+
+
+# create config files
+echo default._domainkey.$DKIM_DOMAIN $DKIM_DOMAIN:default:/etc/opendkim/keys/default > /etc/opendkim/KeyTable
+echo *@$DKIM_DOMAIN default._domainkey.$DKIM_DOMAIN > /etc/opendkim/SigningTable
+echo 127.0.0.1 > /etc/opendkim/TrustedHosts
+echo 172.16.0.0/12 >> /etc/opendkim/TrustedHosts
+echo 172.17.0.0/16 >> /etc/opendkim/TrustedHosts
+echo 10.0.0.0/8 >> /etc/opendkim/TrustedHosts
+
+hash -r
+# chkconfig --del sendmail
+service opendkim start
+
+postconf -e "smtpd_milters = inet:127.0.0.1:8891"
+postconf -e "non_smtpd_milters = $smtpd_milters"
+postconf -e "milter_default_action = accept"
+postconf -e "milter_protocol = 2"
+
 if [ -z "$MTP_INTERFACES" ]; then
   postconf -e "inet_interfaces = all"
 else
