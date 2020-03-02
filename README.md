@@ -1,4 +1,4 @@
-# Postfix SMTP only with relay support
+# Postfix SMTP only with DKIM filter and relay support
 
 Postfix SMTP only Docker image with SMTP relay support.
 
@@ -7,26 +7,7 @@ Postfix SMTP only Docker image with SMTP relay support.
  - Expose: **25**
 
 
-## Supported tags and respective Dockerfile links
-
-  - `:latest` [*Dockerfile*](https://github.com/eea/eea.docker.postfix/blob/master/Dockerfile) - CentOS: **7** Postfix: **2.10.1**
-
-### Stable and immutable tags
-
-  - `:2.10-3.7` [*Dockerfile*](https://github.com/eea/eea.docker.postfix/blob/2.10-3.6/Dockerfile) - Postfix: **2.10** Release: *3.7*
-
-
-See [older versions](https://github.com/eea/eea.docker.postfix/releases)
-
-
-## Base docker image
-
- - [hub.docker.com](https://hub.docker.com/r/eeacms/postfix)
-
-
-## Source code
-
-  - [github.com](http://github.com/eea/eea.docker.postfix)
+Forked from  [github.com](http://github.com/eea/eea.docker.postfix)
 
 
 ## Usage
@@ -35,12 +16,14 @@ Start postfix (to send emails using postfix within container)
 
     $ docker run --rm --name=postfix \
                  -e  MTP_HOST=foo.com \
+                 -e  DKIM_DOMAIN=example.com \
              eeacms/postfix
 
 or start postfix (to send emails by using a remote email server)
 
     $ docker run --rm --name=postfix \
                  -e MTP_HOST=foo.com \
+                 -e DKIM_DOMAIN=example.com \
                  -e MTP_RELAY=smtp.gmail.com \
                  -e MTP_USER=foo \
                  -e MTP_PASS=secret \
@@ -62,8 +45,10 @@ Start sending emails:
 
 ## Supported environment variables
 
+* `DKIM_DOMAIN` (required) Domain name which contains DKIM records
 * `MTP_HOST` The `myhostname` parameter specifies the internet hostname of this mail system
 * `MTP_DESTINATION` The `mydestination` parameter specifies the list of domains that this machine considers itself the final destination for.
+<!-- * `MTP_ADDR` The `mynetworks` parameter specifies which subnets or addresses to receive email from for sending. -->
 * `MTP_BANNER` The `smtpd_banner` parameter specifies the text that follows the 220 code in the SMTP server's greeting banner.
 * `MTP_RELAY` The `relayhost` parameter specifies the default host to send mail to when no entry is matched in the optional transport(5) table.
 * `MTP_RELAY_DOMAINS` The `relay_domains` parameter restricts what destinations this system will relay mail to.
@@ -83,8 +68,3 @@ you can redistribute it and/or modify it under the terms of the GNU
 General Public License as published by the Free Software Foundation;
 either version 2 of the License, or (at your option) any later
 version.
-
-
-## Funding
-
-[European Environment Agency (EU)](http://eea.europa.eu)
